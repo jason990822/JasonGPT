@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <link href="style1.css" rel="stylesheet" type="text/css">
+    <link rel='stylesheet' href='https://s3-us-west-2.amazonaws.com/s.cdpn.io/1462889/unicons.css'>
+    <script src="https://kit.fontawesome.com/80276f8bce.js" crossorigin="anonymous"></script>
+    <!-- <script type="text/javascript" src="script.js"></script> -->
+    <!-- Cloudflare Web Analytics -->
+    <!-- <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+            data-cf-beacon='{"token": "2929d361bab44c8392e78bf5421d742f"}'></script> -->
+    <!-- End Cloudflare Web Analytics -->
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="./favicon-96.png">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<meta charset="UTF-8">
+<title>JasonGPT</title>
+</head>
+
+<body>
+    <div class="sec-center" style="margin-right: 700px;margin-top: -70px;">
+        <input class="dropdown" type="checkbox" id="dropdown" name="dropdown" />
+        <label class="for-dropdown" for="dropdown" id="mode"><i class="uil uil-arrow-down"></i></label>
+        <div class="section-dropdown">
+            <a href="#" id="ChatBot" onclick="JasonChatBot()">ChatBot<i class="uil uil-arrow-right"></i></a>
+            <a href="#" onclick="JasonSerperGoogle()">SerperGoogle<i class="uil uil-arrow-right"></i></a>
+
+            <input onclick="JasonDocument()" class="dropdown-sub" type="checkbox" id="dropdown-sub"
+                name="dropdown-sub" />
+            <label class="for-dropdown-sub" for="dropdown-sub">Document <i class="uil uil-plus"></i></label>
+            <div class="section-dropdown-sub">
+                <!-- <a href="#">filename1 <i class="uil uil-arrow-right"></i></a>
+                <a href="#">filename2 <i class="uil uil-arrow-right"></i></a> -->
+            </div>
+            <a href="#" onclick="JasonURL()">URL <i class="uil uil-arrow-right"></i></a>
+            <!-- <a href="#" onclick="JasonBilibili()">Bilibili <i class="uil uil-arrow-right"></i></a> -->
+            <a href="#" onclick="JasonYoutube()">Youtube <i class="uil uil-arrow-right"></i></a>
+            <a href="#"><input type="text" placeholder="输入key" id="userkey"></input></a>
+            <a href="#"><input type="url" placeholder="输入链接" id="input_url"></input></a>
+
+            <a href="#">
+                <form action="/upload" method="post" enctype="multipart/form-data" class="input-group shadow"
+                    target="frameName">
+                    <label>点击上传文件
+                        <input id='myFileInput' type="file" x-ref="file" name="files" class="d-none"
+                            style="display: none;">
+                    </label>
+                    <input id="user_id" type="text" name="userid" value="1209601741" style="display: none;"></input>
+                    <input class="btn btn-primary px-4" type="submit"
+                        style="padding: 5px,5px; margin-left: 33px;"></input>
+                </form>
+                </i>
+            </a>
+        </div>
+    </div>
+
+
+    <div id="container">
+        <button id="record-button"><i class="fas fa-microphone"></i></button>
+        <div id="error-message">Error occurred</div>
+        <div id="spinner"></div>
+    </div>
+    <iframe src="" frameborder="0" name="frameName" width="100%" style="display: none;"></iframe>
+</body>
+<script>
+    //与文档进行交流时，必须选中需要交流的文档都有哪些，前端检测是否发生变化，如果发生了
+    //那么需要删除向量数据库，否则不用改变
+    let current_mode = 'ChatBox'
+    let link = ''
+    let selectarr = [false, false, false, false, false]
+    let userfilename = []
+    document.getElementById("mode").innerHTML = "ChatBox <i class='uil uil-arrow-down'></i>";
+    let user_id = '1209601741'
+
+    function JasonChatBot() {
+        current_mode = 'ChatBox'
+        document.getElementById("mode").innerHTML = "ChatBox <i class='uil uil-arrow-down'></i>";
+        document.getElementById("mode").click()
+    }
+
+    function JasonSerperGoogle() {
+        current_mode = 'SerperGoogle'
+        document.getElementById("mode").innerHTML = "SerperGoogle <i class='uil uil-arrow-down'></i>";
+        document.getElementById("mode").click()
+    }
+
+    function JasonBilibili() {
+
+        if (document.getElementById("input_url").value == "") {
+            alert('请输入链接')
+        } else {
+            current_mode = 'Bilibili'
+            document.getElementById("mode").innerHTML = "Bilibili <i class='uil uil-arrow-down'></i>";
+            document.getElementById("mode").click()
+        }
+
+    }
+
+    function JasonURL() {
+
+        if (document.getElementById("input_url").value == "") {
+            alert('请输入链接')
+        } else {
+            current_mode = 'URL'
+            document.getElementById("mode").innerHTML = "URL <i class='uil uil-arrow-down'></i>";
+            document.getElementById("mode").click()
+        }
+
+    }
+
+    function JasonYoutube() {
+
+        if (document.getElementById("input_url").value == "") {
+            alert('请输入链接')
+        } else {
+            current_mode = 'Youtube'
+            document.getElementById("mode").innerHTML = "Youtube <i class='uil uil-arrow-down'></i>";
+            document.getElementById("mode").click()
+        }
+
+    }
+
+    function JasonDocument() {
+        current_mode = 'Document'
+        document.getElementById("mode").innerHTML = "Document <i class='uil uil-arrow-down'></i>";
+        axios.get('/list', {
+            params: {
+                userid: document.getElementById('userkey').value
+            }
+        })
+            .then(function (response) {
+                arr = response.data
+                const dropdownSub = document.querySelector('.section-dropdown-sub');
+                dropdownSub.innerHTML = '';
+                userfilename = []
+                for (let i = 0; i < arr.length; i++) {
+                    const newLink = document.createElement('a');
+                    newLink.href = '#';
+                    newLink.innerText = arr[i];
+                    const icon = document.createElement('i');
+                    icon.className = 'uil uil-arrow-right';
+                    newLink.appendChild(icon);
+                    newLink.addEventListener('click', function (event) {
+                        // 处理点击事件的代码
+                        if (selectarr[i]) {
+                            newLink.style.backgroundColor = 'black';
+                            selectarr[i] = false;
+                        } else {
+                            newLink.style.backgroundColor = '#ffeba7';
+                            selectarr[i] = true;
+                        }
+                        if (selectarr[i]) {
+                            userfilename.push(arr[i])
+                        } else {
+                            let index = userfilename.indexOf(arr[i]);
+                            if (index !== -1) {
+                                userfilename.splice(index, 1);
+                            }
+                        }
+                        console.log(userfilename)
+                    });
+                    // 将新的a标签元素添加到div元素中
+                    dropdownSub.appendChild(newLink);
+                }
+            })
+    }
+
+
+    const audio = new Audio()
+    let mediaRecorder
+    const conversationThusFar = []
+    let silenceAudioBlob
+
+    const startRecording = async () => {
+        await playSilence()
+
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            console.log("starting recording")
+            mediaRecorder = new MediaRecorder(stream)
+            mediaRecorder.ondataavailable = event => sendData(event.data)
+            mediaRecorder.start()
+        })
+    }
+
+    //https://stackoverflow.com/a/57547943
+    const playSilence = async () => {
+        if (silenceAudioBlob) audio.src = URL.createObjectURL(silenceAudioBlob)
+        else audio.src = "/silence.mp3"
+
+        await audio.play()
+    }
+
+    const sendData = async data => {
+        await validate(data)
+
+        displaySpinner()
+
+        console.log("sending data")
+        fetch("inference", {
+            method: "POST",
+            body: createBody(data),
+            headers: {
+                'conversation': base64Encode(JSON.stringify(current_mode)),
+                'link': base64Encode(JSON.stringify(document.getElementById('input_url').value)),
+                'userid': base64Encode(JSON.stringify(document.getElementById('userkey').value)),
+                'docfile': base64Encode(JSON.stringify(userfilename))
+                // 'conversation': mode
+            }
+
+        })
+            .then(handleResponse)
+            .then(handleSuccess)
+            .catch(handleError)
+    }
+
+    function base64Encode(str) {
+        const encoder = new TextEncoder()
+        const data = encoder.encode(str)
+        return btoa(String.fromCharCode(...new Uint8Array(data)))
+    }
+
+    function base64Decode(base64) {
+        const binaryStr = atob(base64)
+        const bytes = new Uint8Array([...binaryStr].map((char) => char.charCodeAt(0)))
+        return new TextDecoder().decode(bytes)
+    }
+
+    const handleResponse = res => {
+        if (!res.ok) return Promise.reject(res)
+
+        let newMessages = JSON.parse(base64Decode(res.headers.get("text")))
+        conversationThusFar.push(...newMessages)
+        return res.blob()
+    }
+
+    const createBody = data => {
+        const formData = new FormData()
+        formData.append("audio", new Blob([data], { type: getMimeType() }), getFileName())
+        return formData
+    }
+
+    const getMimeType = () => {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+            return 'audio/webm;codecs=opus'
+        } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+            return 'audio/ogg;codecs=opus'
+        } else if (MediaRecorder.isTypeSupported('video/mp4;codecs=mp4a')) {
+            return 'video/mp4;codecs=mp4a'
+        } else throw new Error("No supported audio Mime types in this browser")
+    }
+
+    const handleSuccess = async blob => {
+        audio.src = URL.createObjectURL(blob)
+        await audio.play()
+        resetUI()
+    }
+
+    const handleError = res => {
+        console.log(`error encountered - status code: ${res.status}`)
+        resetUI()
+        showErrorMessage()
+    }
+
+    const displaySpinner = () => {
+        document.getElementById("spinner").style.display = "block"
+        document.getElementById("record-button").style.display = "none"
+    }
+
+    const resetUI = () => {
+        document.getElementById("spinner").style.display = "none"
+        document.getElementById("record-button").style.display = "block"
+    }
+
+    const showErrorMessage = () => {
+        let errorMessage = document.getElementById('error-message')
+        errorMessage.style.display = "block"
+        setTimeout(() => errorMessage.style.display = "none", 2000)
+    }
+
+    const validate = async data => {
+        const decodedData = await new AudioContext().decodeAudioData(await data.arrayBuffer())
+        const duration = decodedData.duration
+        const minDuration = 0.4
+
+        if (duration < minDuration) throw new Error(`Duration is ${duration}s, which is less than minimum of ${minDuration}s`)
+    }
+
+    const getFileName = () => {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+            return 'audio.webm'
+        } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+            return 'audio.ogg'
+        } else if (MediaRecorder.isTypeSupported('video/mp4;codecs=mp4a')) {
+            return 'audio.mp4'
+        } else throw new Error("No supported audio Mime types in this browser")
+    }
+
+    const stopRecording = () => {
+        mediaRecorder?.stop()
+        console.log("stopped recording")
+    }
+
+    const vibrate = () => {
+        if (navigator.vibrate) navigator.vibrate(100)
+    }
+
+    const fetchSilence = async () => {
+        try {
+            const response = await fetch("/silence.mp3")
+            silenceAudioBlob = await response.blob()
+        } catch (error) {
+            console.error("Error fetching silence.mp3:", error)
+        }
+    }
+
+    const prepare = async () => {
+        await fetchSilence()
+
+        const recordButton = document.getElementById("record-button")
+
+        recordButton.addEventListener("mousedown", startRecording)
+        recordButton.addEventListener("mouseup", stopRecording)
+        recordButton.addEventListener("touchstart", startRecording)
+        recordButton.addEventListener("touchend", stopRecording)
+        recordButton.addEventListener("touchcancel", stopRecording)
+        recordButton.addEventListener('touchstart', vibrate)
+    }
+
+    window.onload = prepare
+</script>
+
+</html>
