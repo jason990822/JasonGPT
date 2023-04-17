@@ -1,3 +1,5 @@
+[![Alt text for your video](https://github.com/jason990822/JasonGPT/blob/main/app/text_content/JasonGPT.png)](https://www.bilibili.com/video/BV1nM411L7b3/)
+
 1、在jasonassist.py与main.py中填入openai.api_key
 
 2、去https://serper.dev/申请key，并填入jasonassist.py中的os.environ["SERPER_API_KEY"]
